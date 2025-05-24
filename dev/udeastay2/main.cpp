@@ -4,7 +4,7 @@
 
 int main() {
     // Pruebas de Fecha
-    Fecha hoy(24, 5, 2025);
+    Fecha hoy(29, 2, 2024);
     Fecha manana = hoy.sumarDias(1);
     std::cout << "Hoy: "; hoy.mostrar(); std::cout << std::endl;
     std::cout << "Mañana: "; manana.mostrar(); std::cout << std::endl;

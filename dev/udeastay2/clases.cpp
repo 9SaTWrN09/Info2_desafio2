@@ -169,3 +169,88 @@ const char* Alojamiento::getCodigo() const { return codigo; }
 const char* Alojamiento::getNombre() const { return nombre; }
 const char* Alojamiento::getMunicipio() const { return municipio; }
 double Alojamiento::getPrecioPorNoche() const { return precioPorNoche; }
+
+
+// Constructor principal
+Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
+                 Alojamiento* alo, const char* docHuesped,
+                 const char* metodo, const Fecha& fPago, double monto,
+                 const char* anot)
+    : fechaEntrada(entrada), duracionNoches(duracion), alojamiento(alo),
+    fechaPago(fPago), monto(monto), estado(EstadoReserva::Activa) {
+
+    codigo = new char[strlen(cod) + 1];
+    strcpy(codigo, cod);
+
+    documentoHuesped = new char[strlen(docHuesped) + 1];
+    strcpy(documentoHuesped, docHuesped);
+
+    metodoPago = new char[strlen(metodo) + 1];
+    strcpy(metodoPago, metodo);
+
+    anotaciones = new char[1001]; // 1000 caracteres + '\0'
+    strncpy(anotaciones, anot, 1000);
+    anotaciones[1000] = '\0';
+}
+
+// Constructor de copia (copia profunda)
+Reserva::Reserva(const Reserva& otra)
+    : fechaEntrada(otra.fechaEntrada), duracionNoches(otra.duracionNoches),
+    alojamiento(otra.alojamiento), fechaPago(otra.fechaPago),
+    monto(otra.monto), estado(otra.estado) {
+
+    codigo = new char[strlen(otra.codigo) + 1];
+    strcpy(codigo, otra.codigo);
+
+    documentoHuesped = new char[strlen(otra.documentoHuesped) + 1];
+    strcpy(documentoHuesped, otra.documentoHuesped);
+
+    metodoPago = new char[strlen(otra.metodoPago) + 1];
+    strcpy(metodoPago, otra.metodoPago);
+
+    anotaciones = new char[1001];
+    strncpy(anotaciones, otra.anotaciones, 1000);
+    anotaciones[1000] = '\0';
+}
+
+// Destructor
+Reserva::~Reserva() {
+    delete[] codigo;
+    delete[] documentoHuesped;
+    delete[] metodoPago;
+    delete[] anotaciones;
+}
+
+// Métodos
+void Reserva::anular() {
+    estado = EstadoReserva::Anulada;
+    alojamiento->eliminarReserva(this); // Método nuevo en Alojamiento
+}
+
+bool Reserva::estaActiva() const {
+    return estado == EstadoReserva::Activa;
+}
+
+const char* Reserva::getCodigo() const {
+    return codigo;
+}
+
+Alojamiento* Reserva::getAlojamiento() const {
+    return alojamiento;
+}
+
+const char* Reserva::getDocumentoHuesped() const {
+    return documentoHuesped;
+}
+
+EstadoReserva Reserva::getEstado() const {
+    return estado;
+}
+
+Fecha Reserva::getFechaFin() const {
+    return fechaEntrada.sumarDias(duracionNoches);
+}
+
+int Reserva::getDuracionNoches() const {
+    return duracionNoches;
+}

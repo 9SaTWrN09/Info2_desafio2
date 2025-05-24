@@ -80,4 +80,49 @@ public:
     double getPrecioPorNoche() const;
 };
 
+
+
+enum class EstadoReserva { Activa, Anulada, Historica };
+
+class Alojamiento; // Declaración adelantada para evitar dependencia circular
+
+class Reserva {
+private:
+    char* codigo;
+    Fecha fechaEntrada;
+    int duracionNoches;
+    Alojamiento* alojamiento; // Puntero al alojamiento asociado
+    char* documentoHuesped;
+    EstadoReserva estado;
+    char* metodoPago;
+    Fecha fechaPago;
+    double monto;
+    char* anotaciones; // Buffer dinámico (hasta 1000 caracteres)
+
+public:
+    // Constructor principal
+    Reserva(const char* cod, const Fecha& entrada, int duracion,
+            Alojamiento* alo, const char* docHuesped,
+            const char* metodo, const Fecha& fPago, double monto,
+            const char* anot);
+
+    // Constructor de copia (copia profunda)
+    Reserva(const Reserva& otra);
+
+    // Destructor
+    ~Reserva();
+
+    // Métodos
+    void anular();
+    bool estaActiva() const;
+    const char* getCodigo() const;
+    Alojamiento* getAlojamiento() const;
+    const char* getDocumentoHuesped() const;
+    EstadoReserva getEstado() const;
+    Fecha getFechaFin() const;
+    int getDuracionNoches() const;
+};
+
+
+
 #endif // CLASES_H

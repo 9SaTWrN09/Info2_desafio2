@@ -1,0 +1,45 @@
+
+# Archivos de compilación
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+
+# Directorios de construcción (ajustar si cambias el nombre del build dir)
+build-*/
+debug/
+release/
+
+# Archivos generados por qmake o CMake
+Makefile*
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.autosave
+*.moc
+moc_*
+qrc_*
+ui_*
+
+# Archivos de CMake opcionales
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Archivos de Qt Creator
+*.creator*
+*.creator.*
+*.qmlproject.user
+*.qmlproject.user.*
+
+# Archivos temporales y de sistema
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
