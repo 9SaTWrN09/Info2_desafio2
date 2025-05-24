@@ -148,6 +148,13 @@ bool Alojamiento::disponible(const Fecha& inicio, int noches) const {
 }
 
 void Alojamiento::reservar(const Fecha& inicio, int noches, const char* codigoReserva) {
+
+    if (codigoReserva == nullptr || strlen(codigoReserva) == 0){
+        throw std:: invalid_argument("Código de reserva inválido");
+    }
+
+
+
     if (!disponible(inicio, noches)) {
         throw std::runtime_error("Alojamiento no disponible en esas fechas");
     }
@@ -163,6 +170,19 @@ void Alojamiento::reservar(const Fecha& inicio, int noches, const char* codigoRe
     }
     nuevoNodo->siguiente = *actual;
     *actual = nuevoNodo;
+}
+void Alojamiento::eliminarReserva(const char* codigoReserva) {
+    NodoRango** actual = &rangosReservados;
+    while (*actual != nullptr) {
+        if (strcmp((*actual)->dato.codigoReserva, codigoReserva) == 0) {
+            NodoRango* temp = *actual;
+            *actual = temp->siguiente;
+            delete temp;
+            return;
+        }
+        actual = &((*actual)->siguiente);
+    }
+    throw std::runtime_error("Código de reserva no encontrado");
 }
 
 const char* Alojamiento::getCodigo() const { return codigo; }
@@ -191,6 +211,11 @@ Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
     anotaciones = new char[1001]; // 1000 caracteres + '\0'
     strncpy(anotaciones, anot, 1000);
     anotaciones[1000] = '\0';
+
+    if (alo == nullptr){
+        throw std::invalid_argument("Alojamiento no puede ser nulo");
+    }
+    alojamiento = alo;
 }
 
 // Constructor de copia (copia profunda)
@@ -223,8 +248,13 @@ Reserva::~Reserva() {
 
 // Métodos
 void Reserva::anular() {
+    if (estado != EstadoReserva::Activa) return; // Evitar duplicados
     estado = EstadoReserva::Anulada;
-    alojamiento->eliminarReserva(this); // Método nuevo en Alojamiento
+    if (alojamiento != nullptr) {
+        alojamiento->eliminarReserva(codigo);
+    } else {
+        throw std::logic_error("Alojamiento no asociado a la reserva");
+    }
 }
 
 bool Reserva::estaActiva() const {

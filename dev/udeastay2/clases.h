@@ -72,6 +72,7 @@ public:
     ~Alojamiento();
 
     // Métodos
+    void eliminarReserva(const char* codigoReserva);
     bool disponible(const Fecha& inicio, int noches) const;
     void reservar(const Fecha& inicio, int noches, const char* codigoReserva);
     const char* getCodigo() const;
