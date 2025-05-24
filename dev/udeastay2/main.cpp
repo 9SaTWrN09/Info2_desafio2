@@ -1,11 +1,18 @@
-#include "mainwindow.h"
+// Ejemplo en main.cpp
+#include "clases.h"
+#include <iostream>
 
-#include <QApplication>
+int main() {
+    // Pruebas de Fecha
+    Fecha hoy(24, 5, 2025);
+    Fecha manana = hoy.sumarDias(1);
+    std::cout << "Hoy: "; hoy.mostrar(); std::cout << std::endl;
+    std::cout << "Mañana: "; manana.mostrar(); std::cout << std::endl;
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+    // Pruebas de Alojamiento
+    Alojamiento hotel("HOT123", "Hotel Ejemplo", "Antioquia", "Medellín", "Calle 123", 150.0);
+    hotel.reservar(hoy, 3, "RES001");
+    std::cout << "Precio por noche: $" << hotel.getPrecioPorNoche() << std::endl;
+
+    return 0;
 }
