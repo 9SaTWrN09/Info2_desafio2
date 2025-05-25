@@ -192,13 +192,27 @@ double Alojamiento::getPrecioPorNoche() const { return precioPorNoche; }
 
 
 // Constructor principal
+// Constructor principal de Reserva (clases.cpp)
 Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
                  Alojamiento* alo, const char* docHuesped,
                  const char* metodo, const Fecha& fPago, double monto,
                  const char* anot)
-    : fechaEntrada(entrada), duracionNoches(duracion), alojamiento(alo),
-    fechaPago(fPago), monto(monto), estado(EstadoReserva::Activa) {
+    : fechaEntrada(entrada),
+    duracionNoches(duracion),
+    alojamiento(alo),  // Inicialización directa
+    fechaPago(fPago),
+    monto(monto),
+    estado(EstadoReserva::Activa) {
 
+    // Validación de parámetros obligatorios
+    if (alo == nullptr) {
+        throw std::invalid_argument("Alojamiento no puede ser nulo");
+    }
+    if (cod == nullptr || strlen(cod) == 0) {
+        throw std::invalid_argument("Código de reserva inválido");
+    }
+
+    // Copia profunda de cadenas
     codigo = new char[strlen(cod) + 1];
     strcpy(codigo, cod);
 
@@ -208,14 +222,21 @@ Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
     metodoPago = new char[strlen(metodo) + 1];
     strcpy(metodoPago, metodo);
 
-    anotaciones = new char[1001]; // 1000 caracteres + '\0'
+    anotaciones = new char[1001];  // 1000 caracteres + '\0'
     strncpy(anotaciones, anot, 1000);
     anotaciones[1000] = '\0';
 
-    if (alo == nullptr){
-        throw std::invalid_argument("Alojamiento no puede ser nulo");
+    // Registrar la reserva en el alojamiento
+    try {
+        alojamiento->reservar(fechaEntrada, duracionNoches, codigo);
+    } catch (const std::exception& e) {
+        // Limpiar memoria si falla la reserva
+        delete[] codigo;
+        delete[] documentoHuesped;
+        delete[] metodoPago;
+        delete[] anotaciones;
+        throw;  // Relanzar la excepción
     }
-    alojamiento = alo;
 }
 
 // Constructor de copia (copia profunda)
