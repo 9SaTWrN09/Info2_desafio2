@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include "listas.h"
 
 // ==================== Clase Fecha ====================
 class Fecha {
@@ -40,6 +41,7 @@ private:
         Rango(const Fecha& i, const Fecha& f, const char* cod);
         ~Rango();
     };
+    Lista<rango> rangosReservados;
 
     struct NodoRango {
         Rango dato;
@@ -75,6 +77,7 @@ enum class EstadoReserva { Activa, Anulada, Historica };
 
 class Reserva {
 private:
+    Lista<char*> historialPagos;
     char* codigo;
     Fecha fechaEntrada;
     int duracionNoches;
