@@ -15,6 +15,8 @@ SOURCES += \
 
 HEADERS += \
     clases.h \
+    file_respository.h \
+    listas.h \
     mainwindow.h
 
 FORMS += \
