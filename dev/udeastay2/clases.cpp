@@ -276,3 +276,72 @@ Fecha Reserva::getFechaFin() const { return fechaEntrada.sumarDias(duracionNoche
 int Reserva::getDuracionNoches() const { return duracionNoches; }
 double Reserva::getMonto() const {return monto;}
 
+
+#include <sstream>
+
+// ==================== Alojamiento CSV ====================
+std::string Alojamiento::toCSV() const {
+    std::ostringstream oss;
+    oss << codigo << "," << nombre << "," << departamento << "," << municipio << ","
+        << direccion << "," << precioPorNoche;
+    return oss.str();
+}
+
+Alojamiento Alojamiento::fromCSV(const std::string& linea) {
+    std::istringstream iss(linea);
+    std::string cod, nom, dep, mun, dir;
+    double precio;
+
+    std::getline(iss, cod, ',');
+    std::getline(iss, nom, ',');
+    std::getline(iss, dep, ',');
+    std::getline(iss, mun, ',');
+    std::getline(iss, dir, ',');
+    iss >> precio;
+
+    return Alojamiento(cod.c_str(), nom.c_str(), dep.c_str(), mun.c_str(), dir.c_str(), precio);
+}
+
+// ==================== Reserva CSV ====================
+std::string Reserva::toCSV() const {
+    std::ostringstream oss;
+    oss << codigo << "," << fechaEntrada.sumarDias(0).diferenciaDias(Fecha(1,1,1900)) << ","
+        << duracionNoches << "," << alojamiento->getCodigo() << "," << documentoHuesped
+        << "," << static_cast<int>(estado) << "," << metodoPago << ","
+        << fechaPago.diferenciaDias(Fecha(1,1,1900)) << "," << monto << "," << anotaciones;
+    return oss.str();
+}
+
+Reserva Reserva::fromCSV(const std::string& linea) {
+    std::istringstream iss(linea);
+    std::string cod, doc, metodo, anot;
+    int diasDesdeBaseEntrada, diasDesdeBasePago, duracion, estadoInt;
+    double monto;
+    std::string codigoAloj;
+
+    std::getline(iss, cod, ',');
+    iss >> diasDesdeBaseEntrada;
+    iss.ignore(1); // coma
+    iss >> duracion;
+    iss.ignore(1);
+    std::getline(iss, codigoAloj, ',');
+    std::getline(iss, doc, ',');
+    iss >> estadoInt;
+    iss.ignore(1);
+    std::getline(iss, metodo, ',');
+    iss >> diasDesdeBasePago;
+    iss.ignore(1);
+    iss >> monto;
+    iss.ignore(1);
+    std::getline(iss, anot);
+
+    Fecha base(1,1,1900);
+    Fecha entrada = base.sumarDias(diasDesdeBaseEntrada);
+    Fecha pago = base.sumarDias(diasDesdeBasePago);
+
+    // ¡OJO! Necesitas pasar el alojamiento correspondiente real, se pone nullptr temporalmente
+    return Reserva(cod.c_str(), entrada, duracion, nullptr,
+                   doc.c_str(), metodo.c_str(), pago, monto, anot.c_str());
+}
+
+
