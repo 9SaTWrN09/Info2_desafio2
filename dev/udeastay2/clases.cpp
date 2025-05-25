@@ -10,7 +10,7 @@ bool Fecha::esBisiesto() const {
 
 int Fecha::diasEnMes() const {
     switch (mes) {
-    case 2:  return esBisiesto() ? 29 : 28;
+    case 2: return esBisiesto() ? 29 : 28;
     case 4: case 6: case 9: case 11: return 30;
     default: return 31;
     }
@@ -47,12 +47,8 @@ Fecha Fecha::sumarDias(int n) const {
         if (n > diasRestantesEnMes) {
             n -= (diasRestantesEnMes + 1);
             nueva.dia = 1;
-            if (nueva.mes == 12) {
-                nueva.mes = 1;
-                nueva.año++;
-            } else {
-                nueva.mes++;
-            }
+            nueva.mes = (nueva.mes == 12) ? 1 : nueva.mes + 1;
+            nueva.año += (nueva.mes == 1) ? 1 : 0;
         } else {
             nueva.dia += n;
             n = 0;
@@ -76,12 +72,26 @@ int Fecha::diferenciaDias(const Fecha& otra) const {
 void Fecha::mostrar() const {
     const char* meses[] = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
-    std::cout << dia << " de " << meses[mes-1] << " del " << año;
+    std::cout << dia << " de " << meses[mes - 1] << " del " << año;
 }
 
 // ==================== Implementación de Alojamiento ====================
+Alojamiento::Rango::Rango(const Fecha& i, const Fecha& f, const char* cod)
+    : inicio(i), fin(f) {
+    codigoReserva = new char[strlen(cod) + 1];
+    strcpy(codigoReserva, cod);
+}
+
+Alojamiento::Rango::~Rango() {
+    delete[] codigoReserva;
+}
+
+Alojamiento::NodoRango::NodoRango(const Rango& r, NodoRango* sig)
+    : dato(r.inicio, r.fin, r.codigoReserva), siguiente(sig) {}
+
 Alojamiento::Alojamiento(const char* cod, const char* nom, const char* dep,
-                         const char* mun, const char* dir, double precio) : precioPorNoche(precio) {
+                         const char* mun, const char* dir, double precio)
+    : precioPorNoche(precio) {
     codigo = new char[strlen(cod) + 1];
     strcpy(codigo, cod);
     nombre = new char[strlen(nom) + 1];
@@ -96,7 +106,6 @@ Alojamiento::Alojamiento(const char* cod, const char* nom, const char* dep,
 }
 
 Alojamiento::Alojamiento(const Alojamiento& otro) : precioPorNoche(otro.precioPorNoche) {
-    // Copia profunda de cadenas
     codigo = new char[strlen(otro.codigo) + 1];
     strcpy(codigo, otro.codigo);
     nombre = new char[strlen(otro.nombre) + 1];
@@ -108,13 +117,12 @@ Alojamiento::Alojamiento(const Alojamiento& otro) : precioPorNoche(otro.precioPo
     direccion = new char[strlen(otro.direccion) + 1];
     strcpy(direccion, otro.direccion);
 
-    // Copia profunda de la lista de reservas
     rangosReservados = nullptr;
     NodoRango* actualOtro = otro.rangosReservados;
     NodoRango** actualThis = &rangosReservados;
     while (actualOtro != nullptr) {
         *actualThis = new NodoRango(actualOtro->dato);
-        actualThis = &((*actualThis)->siguiente);
+        actualThis = &(*actualThis)->siguiente;
         actualOtro = actualOtro->siguiente;
     }
 }
@@ -126,12 +134,11 @@ Alojamiento::~Alojamiento() {
     delete[] municipio;
     delete[] direccion;
 
-    // Liberar lista de reservas
     NodoRango* actual = rangosReservados;
     while (actual != nullptr) {
-        NodoRango* siguiente = actual->siguiente;
-        delete actual;
-        actual = siguiente;
+        NodoRango* temp = actual;
+        actual = actual->siguiente;
+        delete temp;
     }
 }
 
@@ -148,29 +155,23 @@ bool Alojamiento::disponible(const Fecha& inicio, int noches) const {
 }
 
 void Alojamiento::reservar(const Fecha& inicio, int noches, const char* codigoReserva) {
-
-    if (codigoReserva == nullptr || strlen(codigoReserva) == 0){
-        throw std:: invalid_argument("Código de reserva inválido");
+    if (codigoReserva == nullptr || strlen(codigoReserva) == 0) {
+        throw std::invalid_argument("Código de reserva inválido");
     }
-
-
-
     if (!disponible(inicio, noches)) {
         throw std::runtime_error("Alojamiento no disponible en esas fechas");
     }
 
     Fecha fin = inicio.sumarDias(noches);
-    Rango nuevoRango(inicio, fin, codigoReserva);
-    NodoRango* nuevoNodo = new NodoRango(nuevoRango);
-
-    // Insertar en orden
+    NodoRango* nuevoNodo = new NodoRango(Rango(inicio, fin, codigoReserva));
     NodoRango** actual = &rangosReservados;
     while (*actual != nullptr && (*actual)->dato.inicio < inicio) {
-        actual = &((*actual)->siguiente);
+        actual = &(*actual)->siguiente;
     }
     nuevoNodo->siguiente = *actual;
     *actual = nuevoNodo;
 }
+
 void Alojamiento::eliminarReserva(const char* codigoReserva) {
     NodoRango** actual = &rangosReservados;
     while (*actual != nullptr) {
@@ -180,7 +181,7 @@ void Alojamiento::eliminarReserva(const char* codigoReserva) {
             delete temp;
             return;
         }
-        actual = &((*actual)->siguiente);
+        actual = &(*actual)->siguiente;
     }
     throw std::runtime_error("Código de reserva no encontrado");
 }
@@ -190,76 +191,65 @@ const char* Alojamiento::getNombre() const { return nombre; }
 const char* Alojamiento::getMunicipio() const { return municipio; }
 double Alojamiento::getPrecioPorNoche() const { return precioPorNoche; }
 
-
-// Constructor principal
-// Constructor principal de Reserva (clases.cpp)
+// ==================== Implementación de Reserva ====================
 Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
                  Alojamiento* alo, const char* docHuesped,
                  const char* metodo, const Fecha& fPago, double monto,
                  const char* anot)
-    : fechaEntrada(entrada),
+    : codigo(nullptr),
+    fechaEntrada(entrada),
     duracionNoches(duracion),
-    alojamiento(alo),  // Inicialización directa
+    alojamiento(alo),
+    documentoHuesped(nullptr),
+    estado(EstadoReserva::Activa),
+    metodoPago(nullptr),
     fechaPago(fPago),
     monto(monto),
-    estado(EstadoReserva::Activa) {
+    anotaciones(nullptr) {
 
-    // Validación de parámetros obligatorios
-    if (alo == nullptr) {
-        throw std::invalid_argument("Alojamiento no puede ser nulo");
-    }
-    if (cod == nullptr || strlen(cod) == 0) {
-        throw std::invalid_argument("Código de reserva inválido");
-    }
+    if (alo == nullptr) throw std::invalid_argument("Alojamiento no puede ser nulo");
+    if (cod == nullptr || strlen(cod) == 0) throw std::invalid_argument("Código de reserva inválido");
 
-    // Copia profunda de cadenas
     codigo = new char[strlen(cod) + 1];
     strcpy(codigo, cod);
-
     documentoHuesped = new char[strlen(docHuesped) + 1];
     strcpy(documentoHuesped, docHuesped);
-
     metodoPago = new char[strlen(metodo) + 1];
     strcpy(metodoPago, metodo);
-
-    anotaciones = new char[1001];  // 1000 caracteres + '\0'
+    anotaciones = new char[1001];
     strncpy(anotaciones, anot, 1000);
     anotaciones[1000] = '\0';
 
-    // Registrar la reserva en el alojamiento
     try {
         alojamiento->reservar(fechaEntrada, duracionNoches, codigo);
-    } catch (const std::exception& e) {
-        // Limpiar memoria si falla la reserva
+    } catch (...) {
         delete[] codigo;
         delete[] documentoHuesped;
         delete[] metodoPago;
         delete[] anotaciones;
-        throw;  // Relanzar la excepción
+        throw;
     }
 }
 
-// Constructor de copia (copia profunda)
 Reserva::Reserva(const Reserva& otra)
-    : fechaEntrada(otra.fechaEntrada), duracionNoches(otra.duracionNoches),
-    alojamiento(otra.alojamiento), fechaPago(otra.fechaPago),
-    monto(otra.monto), estado(otra.estado) {
+    : codigo(new char[strlen(otra.codigo) + 1]),
+    fechaEntrada(otra.fechaEntrada),
+    duracionNoches(otra.duracionNoches),
+    alojamiento(otra.alojamiento),
+    documentoHuesped(new char[strlen(otra.documentoHuesped) + 1]),
+    estado(otra.estado),
+    metodoPago(new char[strlen(otra.metodoPago) + 1]),
+    fechaPago(otra.fechaPago),
+    monto(otra.monto),
+    anotaciones(new char[1001]) {
 
-    codigo = new char[strlen(otra.codigo) + 1];
     strcpy(codigo, otra.codigo);
-
-    documentoHuesped = new char[strlen(otra.documentoHuesped) + 1];
     strcpy(documentoHuesped, otra.documentoHuesped);
-
-    metodoPago = new char[strlen(otra.metodoPago) + 1];
     strcpy(metodoPago, otra.metodoPago);
-
-    anotaciones = new char[1001];
     strncpy(anotaciones, otra.anotaciones, 1000);
     anotaciones[1000] = '\0';
 }
 
-// Destructor
 Reserva::~Reserva() {
     delete[] codigo;
     delete[] documentoHuesped;
@@ -267,41 +257,22 @@ Reserva::~Reserva() {
     delete[] anotaciones;
 }
 
-// Métodos
 void Reserva::anular() {
-    if (estado != EstadoReserva::Activa) return; // Evitar duplicados
+    if (estado != EstadoReserva::Activa) return;
     estado = EstadoReserva::Anulada;
     if (alojamiento != nullptr) {
         alojamiento->eliminarReserva(codigo);
     } else {
-        throw std::logic_error("Alojamiento no asociado a la reserva");
+        throw std::logic_error("Alojamiento no asociado");
     }
 }
 
-bool Reserva::estaActiva() const {
-    return estado == EstadoReserva::Activa;
-}
+bool Reserva::estaActiva() const { return estado == EstadoReserva::Activa; }
+const char* Reserva::getCodigo() const { return codigo; }
+Alojamiento* Reserva::getAlojamiento() const { return alojamiento; }
+const char* Reserva::getDocumentoHuesped() const { return documentoHuesped; }
+EstadoReserva Reserva::getEstado() const { return estado; }
+Fecha Reserva::getFechaFin() const { return fechaEntrada.sumarDias(duracionNoches); }
+int Reserva::getDuracionNoches() const { return duracionNoches; }
+double Reserva::getMonto() const {return monto;}
 
-const char* Reserva::getCodigo() const {
-    return codigo;
-}
-
-Alojamiento* Reserva::getAlojamiento() const {
-    return alojamiento;
-}
-
-const char* Reserva::getDocumentoHuesped() const {
-    return documentoHuesped;
-}
-
-EstadoReserva Reserva::getEstado() const {
-    return estado;
-}
-
-Fecha Reserva::getFechaFin() const {
-    return fechaEntrada.sumarDias(duracionNoches);
-}
-
-int Reserva::getDuracionNoches() const {
-    return duracionNoches;
-}
