@@ -1,35 +1,34 @@
-#include <iostream>
-#include "clases.h"
-#include "file_respository.h"
-#include <string>
 
-int main() {
+#include <iostream>       // Para std::cout, std::cerr
+#include <stdexcept>      // Para manejo de excepciones (std::exception)
+#include "clases.h"       // Para las clases Huesped, Anfitrion y Lista
+#include "listas.h"
+void probarUsuarioBasico() {
     try {
-        // 1. Crear y guardar alojamiento
-        Alojamiento alo("CASA1", "Cabaña Premium", "Antioquia", "Jardín", "Vereda La Esperanza", 250000.0);
-        FileRepository<Alojamiento> repoAlo("alojamientos.dat");
-        repoAlo.guardar(alo);
+        // --- Crear huésped con reservas ---
+        Huesped huesped("1001", "claveH", 3, 4.5);
+        huesped.agregarItem("RES1");
+        huesped.agregarItem("RES2");
 
-        // 2. Crear y guardar reserva
-        Fecha entrada(20, 12, 2024);
-        Fecha pago(1, 12, 2024);
-        Reserva res("RES2024", entrada, 5, "CASA1", "1000001", "Transferencia", pago, 1250000.0, "Check-in temprano");
-        FileRepository<Reserva> repoRes("reservas.dat");
-        repoRes.guardar(res);
-
-        // 3. Cargar y verificar datos
-        Lista<Reserva> reservas = repoRes.cargar();
-        if (reservas.tamano() > 0) {
-            Reserva& r = reservas.obtener(0);
-            std::cout << "Reserva cargada:\n"
-                      << "Alojamiento: " << r.getCodigoAlojamiento() << "\n"
-                      << "Fecha Pago: " << r.getFechaPago().getDia() << "/"
-                      << r.getFechaPago().getMes() << "/"
-                      << r.getFechaPago().getAño() << "\n";
+        // Verificar colección
+        const Lista<char*>& reservas = huesped.getColeccion();
+        if (reservas.tamano() != 2) {
+            std::cerr << "Error: Colección no tiene 2 elementos\n";
         }
 
+        // --- Crear anfitrión con alojamientos ---
+        Anfitrion anfitrion("2001", "claveA", 12, 4.9);
+        anfitrion.agregarItem("ALO1");
+        anfitrion.agregarItem("ALO2");
+
+        // Verificar colección
+        const Lista<char*>& alojamientos = anfitrion.getColeccion();
+        if (alojamientos.tamano() != 2) {
+            std::cerr << "Error: Colección no tiene 2 elementos\n";
+        }
+
+        std::cout << "Prueba Usuario Básico: Éxito\n";
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << "\n";
     }
-    return 0;
 }

@@ -10,19 +10,14 @@ CONFIG += c++17
 
 SOURCES += \
     clases.cpp \
-    crear_usuarios.cpp \
     main.cpp \
-    mainwindow.cpp \
-    menu_usuario.cpp
+    mainwindow.cpp
 
 HEADERS += \
     clases.h \
-    controller.h \
-    crear_usuarios.h \
     file_respository.h \
     listas.h \
-    mainwindow.h \
-    menu_usuario.h
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui
