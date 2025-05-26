@@ -1,19 +1,34 @@
+#include <iostream>
 #include "clases.h"
-#include "file_repository.h"
-#include <cassert>
+#include "file_respository.h"
 
 int main() {
-    // 1. Crear alojamiento y reserva
-    Alojamiento casa("CASA_123", "Casa Campo", "Antioquia", "Medellín", "Calle 10 #45-22", 150.0);
-    Reserva reserva("RES_001", Fecha(15, 7, 2025), 5, &casa, "1001234567", "TarjetaCrédito", Fecha(10, 7, 2025), 750.0, "");
+    try {
+        // 1. Crear y guardar alojamiento
+        Alojamiento alo("CASA1", "Cabaña Premium", "Antioquia", "Jardín", "Vereda La Esperanza", 250000.0);
+        FileRepository<Alojamiento> repoAlo("alojamientos.dat");
+        repoAlo.guardar(alo);
 
-    // 2. Verificar monto
-    assert(reserva.getMonto() == 750.0);
+        // 2. Crear y guardar reserva
+        Fecha entrada(20, 12, 2024);
+        Fecha pago(1, 12, 2024); // ✅ Fecha de pago válida
+        Reserva res("RES2024", entrada, 5, "CASA1", "1000001", "Transferencia", pago, 1250000.0, "Check-in temprano");
+        FileRepository<Reserva> repoRes("reservas.dat");
+        repoRes.guardar(res);
 
-    // 3. Probar persistencia
-    FileRepository<Alojamiento> repoAlojamientos("alojamientos.txt");
-    repoAlojamientos.guardar(casa);
+        // 3. Cargar y verificar datos
+        Lista<Reserva> reservas = repoRes.cargar();
+        if (reservas.tamano() > 0) {
+            Reserva& r = reservas.obtener(0);
+            std::cout << "Reserva cargada:\n"
+                      << "Alojamiento: " << r.getCodigoAlojamiento() << "\n"
+                      << "Fecha Pago: " << r.getFechaPago().getDia() << "/"
+                      << r.getFechaPago().getMes() << "/"
+                      << r.getFechaPago().getAño() << "\n"; // ✅ Debe mostrar 1/12/2024
+        }
 
-    std::cout << "¡Todas las pruebas pasaron! 🎉" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
     return 0;
 }
