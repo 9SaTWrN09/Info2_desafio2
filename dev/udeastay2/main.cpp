@@ -1,6 +1,7 @@
 #include <iostream>
 #include "clases.h"
 #include "file_respository.h"
+#include <string>
 
 int main() {
     try {
@@ -11,7 +12,7 @@ int main() {
 
         // 2. Crear y guardar reserva
         Fecha entrada(20, 12, 2024);
-        Fecha pago(1, 12, 2024); // ✅ Fecha de pago válida
+        Fecha pago(1, 12, 2024);
         Reserva res("RES2024", entrada, 5, "CASA1", "1000001", "Transferencia", pago, 1250000.0, "Check-in temprano");
         FileRepository<Reserva> repoRes("reservas.dat");
         repoRes.guardar(res);
@@ -24,7 +25,7 @@ int main() {
                       << "Alojamiento: " << r.getCodigoAlojamiento() << "\n"
                       << "Fecha Pago: " << r.getFechaPago().getDia() << "/"
                       << r.getFechaPago().getMes() << "/"
-                      << r.getFechaPago().getAño() << "\n"; // ✅ Debe mostrar 1/12/2024
+                      << r.getFechaPago().getAño() << "\n";
         }
 
     } catch (const std::exception& e) {

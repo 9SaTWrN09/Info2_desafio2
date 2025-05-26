@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <cstring>
 #include "listas.h"
+#include <string>
 
 // ==================== Clase Fecha ====================
 class Fecha {
@@ -82,8 +83,8 @@ public:
     double getPrecioPorNoche() const { return precioPorNoche; }
 
     // Serialización
-    std::string toCSV() const;
-    static Alojamiento fromCSV(const std::string& linea);
+    char* toCSV() const;
+    static Alojamiento fromCSV(const char* linea);
 };
 
 // ==================== Enum Estado Reserva ====================
@@ -136,31 +137,128 @@ template<typename TPolicy>
 class Usuario {
 private:
     char* documento;
+    char* contraseña;
     int antiguedadMeses;
     double puntuacion;
     Lista<char*> coleccion;
 
-    void limpiarColeccion();
-    void copiarColeccion(const Lista<char*>& otra);
+    void limpiarColeccion() {
+        while (!coleccion.vacia()) {
+            delete[] coleccion.obtener(0);
+            coleccion.eliminar(0);
+        }
+    }
+
+    void copiarColeccion(const Lista<char*>& otra) {
+        for (int i = 0; i < otra.tamano(); ++i) {
+            char* item = new char[strlen(otra.obtener(i)) + 1];
+            strcpy(item, otra.obtener(i));
+            coleccion.insertar(item);
+        }
+    }
 
 public:
-    Usuario(const char* doc, int antiguedad, double punt);
-    Usuario(const Usuario& otro);
-    Usuario& operator=(const Usuario& otro);
-    ~Usuario();
+    // Constructor
+    Usuario(const char* doc, const char* pass, int antiguedad, double punt)
+        : documento(new char[strlen(doc) + 1]),
+        contraseña(new char[strlen(pass) + 1]),
+        antiguedadMeses(antiguedad),
+        puntuacion(punt) {
+        strcpy(documento, doc);
+        strcpy(contraseña, pass);
+    }
 
-    // Getters/Setters
+    // Constructor de copia
+    Usuario(const Usuario& otro)
+        : documento(new char[strlen(otro.documento) + 1]),
+        contraseña(new char[strlen(otro.contraseña) + 1]),
+        antiguedadMeses(otro.antiguedadMeses),
+        puntuacion(otro.puntuacion) {
+        strcpy(documento, otro.documento);
+        strcpy(contraseña, otro.contraseña);
+        copiarColeccion(otro.coleccion);
+    }
+
+    // Operador de asignación
+    Usuario& operator=(const Usuario& otro) {
+        if (this != &otro) {
+            delete[] documento;
+            delete[] contraseña;
+            limpiarColeccion();
+
+            documento = new char[strlen(otro.documento) + 1];
+            strcpy(documento, otro.documento);
+            contraseña = new char[strlen(otro.contraseña) + 1];
+            strcpy(contraseña, otro.contraseña);
+            antiguedadMeses = otro.antiguedadMeses;
+            puntuacion = otro.puntuacion;
+            copiarColeccion(otro.coleccion);
+        }
+        return *this;
+    }
+
+    // Destructor
+    ~Usuario() {
+        delete[] documento;
+        delete[] contraseña;
+        limpiarColeccion();
+    }
+
+    // Getters
     const char* getDocumento() const { return documento; }
+    const char* getContraseña() const { return contraseña; }
     int getAntiguedad() const { return antiguedadMeses; }
     double getPuntuacion() const { return puntuacion; }
     const Lista<char*>& getColeccion() const { return coleccion; }
 
-    void agregarItem(const char* item);
-    bool eliminarItem(const char* item);
+    void agregarItem(const char* item) {
+        char* copia = new char[strlen(item) + 1];
+        strcpy(copia, item);
+        coleccion.insertar(copia);
+    }
+
+    bool eliminarItem(const char* item) {
+        for (int i = 0; i < coleccion.tamano(); ++i) {
+            if (strcmp(coleccion.obtener(i), item) == 0) {
+                delete[] coleccion.obtener(i);
+                coleccion.eliminar(i);
+                return true;
+            }
+        }
+        return false;
+    }
 
     // Serialización
-    char* toCSV() const;
-    static Usuario fromCSV(const char* linea);
+    char* toCSV() const {
+        std::ostringstream oss;
+        oss << documento << ","
+            << contraseña << ","
+            << antiguedadMeses << ","
+            << puntuacion << ","
+            << TPolicy::getNombreColeccion();
+
+        char* resultado = new char[oss.str().size() + 1];
+        strcpy(resultado, oss.str().c_str());
+        return resultado;
+    }
+
+    static Usuario fromCSV(const char* linea) {
+        std::istringstream iss(linea);
+        std::string doc, pass, coleccion;
+        int antiguedad;
+        double punt;
+
+        std::getline(iss, doc, ',');
+        std::getline(iss, pass, ',');
+        iss >> antiguedad;
+        iss.ignore();
+        iss >> punt;
+        iss.ignore();
+        std::getline(iss, coleccion);
+
+        Usuario user(doc.c_str(), pass.c_str(), antiguedad, punt);
+        return user;
+    }
 };
 
 // Políticas para Usuario

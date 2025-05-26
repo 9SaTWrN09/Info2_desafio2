@@ -2,6 +2,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <string>
+#include <cstdlib>
 
 // ==================== Implementación de Fecha ====================
 bool Fecha::esBisiesto() const {
@@ -146,28 +148,34 @@ void Alojamiento::reservar(const Fecha& inicio, int noches, const char* codigoRe
     rangosReservados = nuevo;
 }
 
-std::string Alojamiento::toCSV() const {
-    std::ostringstream oss;
-    oss << codigo << "," << nombre << "," << departamento << ","
-        << municipio << "," << direccion << "," << precioPorNoche;
-    return oss.str();
+char* Alojamiento::toCSV() const {
+    int tamano = strlen(codigo) + strlen(nombre) + strlen(departamento) +
+                 strlen(municipio) + strlen(direccion) + 50;
+    char* buffer = new char[tamano];
+    snprintf(buffer, tamano, "%s,%s,%s,%s,%s,%.2f",
+             codigo, nombre, departamento, municipio, direccion, precioPorNoche);
+    return buffer;
 }
 
-Alojamiento Alojamiento::fromCSV(const std::string& linea) {
-    std::istringstream iss(linea);
-    std::string cod, nom, dep, mun, dir;
-    double precio;
+Alojamiento Alojamiento::fromCSV(const char* linea) {
+    char* lineaCopia = new char[strlen(linea) + 1];
+    strcpy(lineaCopia, linea);
 
-    std::getline(iss, cod, ',');
-    std::getline(iss, nom, ',');
-    std::getline(iss, dep, ',');
-    std::getline(iss, mun, ',');
-    std::getline(iss, dir, ',');
-    iss >> precio;
+    char* cod = strtok(lineaCopia, ",");
+    char* nom = strtok(nullptr, ",");
+    char* dep = strtok(nullptr, ",");
+    char* mun = strtok(nullptr, ",");
+    char* dir = strtok(nullptr, ",");
+    char* precioStr = strtok(nullptr, ",");
 
-    return Alojamiento(cod.c_str(), nom.c_str(), dep.c_str(),
-                      mun.c_str(), dir.c_str(), precio);
+    double precio = atof(precioStr);
+
+    Alojamiento resultado(cod, nom, dep, mun, dir, precio);
+    delete[] lineaCopia;
+    return resultado;
 }
+
+
 
 // ==================== Implementación de Reserva ====================
 Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
@@ -302,3 +310,5 @@ Reserva Reserva::fromCSV(const char* linea) {
         anot.c_str()
         );
 }
+
+
