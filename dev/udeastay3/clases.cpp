@@ -12,9 +12,9 @@ bool Fecha::esBisiesto() const {
 
 int Fecha::diasEnMes() const {
     switch (mes) {
-        case 2: return esBisiesto() ? 29 : 28;
-        case 4: case 6: case 9: case 11: return 30;
-        default: return 31;
+    case 2: return esBisiesto() ? 29 : 28;
+    case 4: case 6: case 9: case 11: return 30;
+    default: return 31;
     }
 }
 
@@ -129,7 +129,7 @@ Alojamiento::Rango::~Rango() {
 Alojamiento::NodoRango::NodoRango(const Rango& r, NodoRango* sig) : dato(r.inicio, r.fin, r.codigoReserva), siguiente(sig) {}
 
 Alojamiento::Alojamiento(const char* cod, const char* nom, const char* dep,
-                        const char* mun, const char* dir, double precio) {
+                         const char* mun, const char* dir, double precio) {
     codigo = new char[strlen(cod) + 1];
     strcpy(codigo, cod);
 
@@ -216,9 +216,9 @@ Alojamiento Alojamiento::fromCSV(const char* linea) {
 
 // ==================== Implementación de Reserva ====================
 Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
-                const char* codAlojamiento, const char* docHuesped,
-                const char* metodo, const Fecha& fPago, double monto,
-                const char* anot) {
+                 const char* codAlojamiento, const char* docHuesped,
+                 const char* metodo, const Fecha& fPago, double monto,
+                 const char* anot) {
     codigo = new char[strlen(cod) + 1];
     strcpy(codigo, cod);
 

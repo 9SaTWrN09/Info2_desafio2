@@ -141,7 +141,7 @@ private:
     char* contraseña;
     int antiguedadMeses;
     double puntuacion;
-    Lista<char*> coleccion;
+    Lista<const char*> coleccion;
 
     void limpiarColeccion() {
         while (!coleccion.vacia()) {
@@ -210,12 +210,10 @@ public:
     const char* getContraseña() const { return contraseña; }
     int getAntiguedad() const { return antiguedadMeses; }
     double getPuntuacion() const { return puntuacion; }
-    const Lista<char*>& getColeccion() const { return coleccion; }
+    const Lista<const char*>& getColeccion() const { return coleccion; }
 
     void agregarItem(const char* item) {
-        char* copia = new char[strlen(item) + 1];
-        strcpy(copia, item);
-        coleccion.insertar(copia);
+        coleccion.insertar(item);  // La lista maneja la copia
     }
 
     bool eliminarItem(const char* item) {
