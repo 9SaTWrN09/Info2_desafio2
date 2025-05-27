@@ -4,9 +4,7 @@
 #include <stdexcept>
 #include <cstring>
 
-// ================================================================
-// Versión genérica para tipos que NO sean const char*
-// ================================================================
+// Versión genérica para tipos que no sean cadenas
 template <typename T>
 class Lista {
 private:
@@ -19,11 +17,7 @@ private:
     Nodo* cabeza;
     int longitud;
 
-public:
-    Lista() : cabeza(nullptr), longitud(0) {}
-
-    // Constructor de copia
-    Lista(const Lista& otra) : cabeza(nullptr), longitud(0) {
+    void copiar(const Lista& otra) {
         Nodo* actual = otra.cabeza;
         while (actual != nullptr) {
             insertar(actual->dato);
@@ -31,15 +25,17 @@ public:
         }
     }
 
-    // Operador de asignación
+public:
+    Lista() : cabeza(nullptr), longitud(0) {}
+
+    Lista(const Lista& otra) : cabeza(nullptr), longitud(0) {
+        copiar(otra);
+    }
+
     Lista& operator=(const Lista& otra) {
         if (this != &otra) {
             limpiar();
-            Nodo* actual = otra.cabeza;
-            while (actual != nullptr) {
-                insertar(actual->dato);
-                actual = actual->siguiente;
-            }
+            copiar(otra);
         }
         return *this;
     }
@@ -47,14 +43,14 @@ public:
     ~Lista() { limpiar(); }
 
     void insertar(const T& dato) {
-        Nodo* nuevoNodo = new Nodo(dato);
-        nuevoNodo->siguiente = cabeza;
-        cabeza = nuevoNodo;
+        Nodo* nuevo = new Nodo(dato);
+        nuevo->siguiente = cabeza;
+        cabeza = nuevo;
         longitud++;
     }
 
     bool eliminar(const T& dato) {
-        if (cabeza == nullptr) return false;
+        if (!cabeza) return false;
 
         if (cabeza->dato == dato) {
             Nodo* temp = cabeza;
@@ -65,11 +61,11 @@ public:
         }
 
         Nodo* actual = cabeza;
-        while (actual->siguiente != nullptr && !(actual->siguiente->dato == dato)) {
+        while (actual->siguiente && actual->siguiente->dato != dato) {
             actual = actual->siguiente;
         }
 
-        if (actual->siguiente != nullptr) {
+        if (actual->siguiente) {
             Nodo* temp = actual->siguiente;
             actual->siguiente = temp->siguiente;
             delete temp;
@@ -79,26 +75,8 @@ public:
         return false;
     }
 
-    // Métodos const y no-const para obtener()
-    T& obtener(int indice) {
-        if (indice < 0 || indice >= longitud) throw std::out_of_range("Índice inválido");
-        Nodo* actual = cabeza;
-        for (int i = 0; i < indice; i++) actual = actual->siguiente;
-        return actual->dato;
-    }
-
-    const T& obtener(int indice) const {
-        if (indice < 0 || indice >= longitud) throw std::out_of_range("Índice inválido");
-        Nodo* actual = cabeza;
-        for (int i = 0; i < indice; i++) actual = actual->siguiente;
-        return actual->dato;
-    }
-
-    int tamano() const { return longitud; }
-    bool vacia() const { return cabeza == nullptr; }
-
     void limpiar() {
-        while (cabeza != nullptr) {
+        while (cabeza) {
             Nodo* temp = cabeza;
             cabeza = cabeza->siguiente;
             delete temp;
@@ -106,13 +84,15 @@ public:
         longitud = 0;
     }
 
+    int tamano() const { return longitud; }
+    bool vacia() const { return cabeza == nullptr; }
+
     class Iterador {
         Nodo* actual;
     public:
         Iterador(Nodo* nodo) : actual(nodo) {}
         bool haySiguiente() const { return actual != nullptr; }
         T& siguiente() {
-            if (!haySiguiente()) throw std::runtime_error("No hay más elementos");
             T& dato = actual->dato;
             actual = actual->siguiente;
             return dato;
@@ -120,36 +100,42 @@ public:
     };
 
     Iterador obtenerIterador() { return Iterador(cabeza); }
+
+    class ConstIterador {
+        const Nodo* actual;
+    public:
+        ConstIterador(const Nodo* nodo) : actual(nodo) {}
+        bool haySiguiente() const { return actual != nullptr; }
+        const T& siguiente() {
+            const T& dato = actual->dato;
+            actual = actual->siguiente;
+            return dato;
+        }
+    };
+
+    ConstIterador obtenerIterador() const { return ConstIterador(cabeza); }
 };
 
-// ================================================================
-// Especialización para const char* (manejo seguro de cadenas)
-// ================================================================
+// Especialización para manejo seguro de char*
 template <>
-class Lista<const char*> {
+class Lista<char*> {
 private:
     struct Nodo {
         char* dato;
         Nodo* siguiente;
 
-        Nodo(const char* dato) : siguiente(nullptr) {
+        Nodo(const char* dato) {
             this->dato = new char[strlen(dato) + 1];
             strcpy(this->dato, dato);
         }
 
-        ~Nodo() {
-            delete[] dato;
-        }
+        ~Nodo() { delete[] dato; }
     };
 
     Nodo* cabeza;
     int longitud;
 
-public:
-    Lista() : cabeza(nullptr), longitud(0) {}
-
-    // Constructor de copia
-    Lista(const Lista& otra) : cabeza(nullptr), longitud(0) {
+    void copiar(const Lista& otra) {
         Nodo* actual = otra.cabeza;
         while (actual != nullptr) {
             insertar(actual->dato);
@@ -157,15 +143,17 @@ public:
         }
     }
 
-    // Operador de asignación
+public:
+    Lista() : cabeza(nullptr), longitud(0) {}
+
+    Lista(const Lista& otra) : cabeza(nullptr), longitud(0) {
+        copiar(otra);
+    }
+
     Lista& operator=(const Lista& otra) {
         if (this != &otra) {
             limpiar();
-            Nodo* actual = otra.cabeza;
-            while (actual != nullptr) {
-                insertar(actual->dato);
-                actual = actual->siguiente;
-            }
+            copiar(otra);
         }
         return *this;
     }
@@ -173,14 +161,14 @@ public:
     ~Lista() { limpiar(); }
 
     void insertar(const char* dato) {
-        Nodo* nuevoNodo = new Nodo(dato);
-        nuevoNodo->siguiente = cabeza;
-        cabeza = nuevoNodo;
+        Nodo* nuevo = new Nodo(dato);
+        nuevo->siguiente = cabeza;
+        cabeza = nuevo;
         longitud++;
     }
 
     bool eliminar(const char* dato) {
-        if (cabeza == nullptr) return false;
+        if (!cabeza) return false;
 
         if (strcmp(cabeza->dato, dato) == 0) {
             Nodo* temp = cabeza;
@@ -191,12 +179,11 @@ public:
         }
 
         Nodo* actual = cabeza;
-        while (actual->siguiente != nullptr &&
-               strcmp(actual->siguiente->dato, dato) != 0) {
+        while (actual->siguiente && strcmp(actual->siguiente->dato, dato) != 0) {
             actual = actual->siguiente;
         }
 
-        if (actual->siguiente != nullptr) {
+        if (actual->siguiente) {
             Nodo* temp = actual->siguiente;
             actual->siguiente = temp->siguiente;
             delete temp;
@@ -206,19 +193,8 @@ public:
         return false;
     }
 
-    // Método const corregido
-    const char* obtener(int indice) const {
-        if (indice < 0 || indice >= longitud) throw std::out_of_range("Índice inválido");
-        Nodo* actual = cabeza;
-        for (int i = 0; i < indice; i++) actual = actual->siguiente;
-        return actual->dato;
-    }
-
-    int tamano() const { return longitud; }
-    bool vacia() const { return cabeza == nullptr; }
-
     void limpiar() {
-        while (cabeza != nullptr) {
+        while (cabeza) {
             Nodo* temp = cabeza;
             cabeza = cabeza->siguiente;
             delete temp;
@@ -226,20 +202,36 @@ public:
         longitud = 0;
     }
 
+    int tamano() const { return longitud; }
+    bool vacia() const { return cabeza == nullptr; }
+
     class Iterador {
         Nodo* actual;
     public:
         Iterador(Nodo* nodo) : actual(nodo) {}
         bool haySiguiente() const { return actual != nullptr; }
-        const char* siguiente() {
-            if (!haySiguiente()) throw std::runtime_error("No hay más elementos");
-            const char* dato = actual->dato;
+        char* siguiente() {
+            char* dato = actual->dato;
             actual = actual->siguiente;
             return dato;
         }
     };
 
     Iterador obtenerIterador() { return Iterador(cabeza); }
+
+    class ConstIterador {
+        const Nodo* actual;
+    public:
+        ConstIterador(const Nodo* nodo) : actual(nodo) {}
+        bool haySiguiente() const { return actual != nullptr; }
+        const char* siguiente() {
+            const char* dato = actual->dato;
+            actual = actual->siguiente;
+            return dato;
+        }
+    };
+
+    ConstIterador obtenerIterador() const { return ConstIterador(cabeza); }
 };
 
 #endif // LISTAS_H
