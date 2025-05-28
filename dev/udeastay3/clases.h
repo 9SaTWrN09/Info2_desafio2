@@ -128,6 +128,18 @@ public:
     double getMonto() const { return monto; }
     Fecha getFechaPago() const { return fechaPago;}
 
+    bool operator==(const Reserva& otra) const {
+        return strcmp(codigo, otra.codigo) == 0;
+    }
+
+    bool operator!=(const Reserva& otra) const {
+        return !(*this == otra);
+    }
+
+    void setEstado(EstadoReserva nuevoEstado) {
+        estado = nuevoEstado;
+    }
+
     // Serialización
     char* toCSV() const;
     static Reserva fromCSV(const char* linea);

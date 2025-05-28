@@ -88,17 +88,15 @@ class FileRepository {
 private:
     char* ruta;
 
-    bool leerLinea(std::ifstream& archivo, StringBuffer& linea) {
+    // Función auxiliar para leer una línea
+    bool leerLinea(FILE* archivo, StringBuffer& linea) {
         char c;
-        bool leido = false;
-        while (archivo.get(c)) {
-            if (c == '\n') break;
-            if (c != '\r') {
-                linea.agregar(c);
-                leido = true;
-            }
+        while ((c = fgetc(archivo))) {
+            if (c == EOF) return !linea.vacio();
+            if (c == '\n') return true;
+            linea.agregar(c);
         }
-        return leido || !linea.vacio();
+        return false;
     }
 
 public:
@@ -107,52 +105,42 @@ public:
         strcpy(ruta, rutaArchivo);
     }
 
-    FileRepository(const FileRepository& otro) {
-        ruta = new char[strlen(otro.ruta) + 1];
-        strcpy(ruta, otro.ruta);
-    }
-
     ~FileRepository() {
         delete[] ruta;
     }
 
-    FileRepository& operator=(const FileRepository& otro) {
-        if (this != &otro) {
-            delete[] ruta;
-            ruta = new char[strlen(otro.ruta) + 1];
-            strcpy(ruta, otro.ruta);
-        }
-        return *this;
-    }
-
+    // Guarda un objeto en el archivo
     void guardar(const T& objeto) {
-        std::ofstream archivo(ruta, std::ios::app);
-        if (!archivo.is_open()) throw std::runtime_error("Error al abrir archivo");
+        FILE* archivo = fopen(ruta, "a");
+        if (!archivo) return;
 
         char* csv = objeto.toCSV();
-        archivo << csv << "\n";
+        fprintf(archivo, "%s\n", csv);
         delete[] csv;
-        archivo.close();
+
+        fclose(archivo);
     }
 
+    // Guarda todos los objetos de una lista
     void guardarTodos(const Lista<T>& objetos) {
-        std::ofstream archivo(ruta, std::ios::trunc);
-        if (!archivo.is_open()) throw std::runtime_error("Error al abrir archivo");
+        FILE* archivo = fopen(ruta, "w");
+        if (!archivo) return;
 
-        typename Lista<T>::Iterador it = objetos.obtenerIterador();
+        auto it = objetos.obtenerIterador();
         while (it.haySiguiente()) {
-            T& obj = it.siguiente();
-            char* csv = obj.toCSV();
-            archivo << csv << "\n";
+            char* csv = it.siguiente().toCSV();
+            fprintf(archivo, "%s\n", csv);
             delete[] csv;
         }
-        archivo.close();
+
+        fclose(archivo);
     }
 
+    // Carga todos los objetos del archivo
     Lista<T> cargar() {
         Lista<T> resultados;
-        std::ifstream archivo(ruta);
-        if (!archivo.is_open()) return resultados;
+        FILE* archivo = fopen(ruta, "r");
+        if (!archivo) return resultados;
 
         StringBuffer linea;
         while (leerLinea(archivo, linea)) {
@@ -160,27 +148,46 @@ public:
                 try {
                     T obj = T::fromCSV(linea.obtener());
                     resultados.insertar(obj);
-                } catch (const std::exception& e) {
-                    // Ignorar línea corrupta
+                } catch (...) {
+                    // Ignorar líneas corruptas
                 }
             }
             linea.limpiar();
         }
-        archivo.close();
+
+        fclose(archivo);
         return resultados;
     }
 
-    void limpiarArchivo() {
-        std::ofstream archivo(ruta, std::ios::trunc);
-        archivo.close();
-    }
+    // Mueve una reserva a histórico
+    void moverAHistorico(const T& reserva) {
+        Lista<T> activas = cargar();
+        Lista<T> nuevasActivas;
+        T reservaModificada;
+        bool encontrada = false;
 
-    bool existe() {
-        std::ifstream archivo(ruta);
-        bool existe = archivo.is_open();
-        archivo.close();
-        return existe;
+        auto it = activas.obtenerIterador();
+        while (it.haySiguiente()) {
+            T r = it.siguiente();
+            if (r == reserva) {
+                // 1. Modificar el estado
+                r.setEstado(Reserva::EstadoReserva::Historica);
+                // 2. Guardar la versión MODIFICADA
+                reservaModificada = r;
+                encontrada = true;
+            } else {
+                nuevasActivas.insertar(r);
+            }
+        }
+
+        // Guardar lista actualizada de activas
+        guardarTodos(nuevasActivas);
+
+        if (encontrada) {
+            FileRepository<T> repoHist("reservas_historicas_test.dat");
+            // 3. Guardar la reserva MODIFICADA (no la original)
+            repoHist.guardar(reservaModificada);
+        }
     }
-};
 
 #endif // FILE_REPOSITORY_H

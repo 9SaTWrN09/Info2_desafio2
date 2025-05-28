@@ -17,5 +17,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     clases.h \
+    controlador.h \
     file_repository.h \
     listas.h

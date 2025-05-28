@@ -231,8 +231,8 @@ Reserva::Reserva(const char* cod, const Fecha& entrada, int duracion,
     metodoPago = new char[strlen(metodo) + 1];
     strcpy(metodoPago, metodo);
 
-    anotaciones = new char[strlen(anot) + 1];
-    strcpy(anotaciones, anot);
+    anotaciones = new char[(anot ? strlen(anot) : 0) + 1];
+    strcpy(anotaciones, anot ? anot : "");
 
     fechaEntrada = entrada;
     duracionNoches = duracion;
@@ -282,6 +282,8 @@ Reserva& Reserva::operator=(const Reserva& otra) {
     return *this;
 }
 
+
+
 Reserva::~Reserva() {
     delete[] codigo;
     delete[] codigoAlojamiento;
@@ -295,20 +297,21 @@ void Reserva::anular() {
 }
 
 char* Reserva::toCSV() const {
-    std::ostringstream oss;
-    oss << codigo << ","
-        << fechaEntrada.getDia() << "/" << fechaEntrada.getMes() << "/" << fechaEntrada.getAño() << ","
-        << duracionNoches << ","
-        << codigoAlojamiento << ","
-        << documentoHuesped << ","
-        << static_cast<int>(estado) << ","
-        << metodoPago << ","
-        << fechaPago.getDia() << "/" << fechaPago.getMes() << "/" << fechaPago.getAño() << "," // ✅ Añadido
-        << monto << ","
-        << anotaciones;
+    char buffer[2000];
+    snprintf(buffer, sizeof(buffer), "%s,%d/%d/%d,%d,%s,%s,%d,%s,%d/%d/%d,%.2f,%s",
+             codigo,
+             fechaEntrada.getDia(), fechaEntrada.getMes(), fechaEntrada.getAño(),
+             duracionNoches,
+             codigoAlojamiento,
+             documentoHuesped,
+             static_cast<int>(estado),
+             metodoPago,
+             fechaPago.getDia(), fechaPago.getMes(), fechaPago.getAño(),
+             monto,
+             anotaciones);
 
-    char* resultado = new char[oss.str().size() + 1];
-    strcpy(resultado, oss.str().c_str());
+    char* resultado = new char[strlen(buffer) + 1];
+    strcpy(resultado, buffer);
     return resultado;
 }
 
