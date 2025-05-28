@@ -233,4 +233,103 @@ struct GuestPolicy {
 };
 
 using Huesped = Usuario<GuestPolicy>;
-#endif // CLASES_H
+
+// ... [Código existente de Huesped] ...
+
+// ==================== Política para Anfitrión ====================
+struct HostPolicy {
+    static const char* getNombreColeccion() { return "alojamientos"; }
+};
+
+// ==================== Especialización para Anfitrión ====================
+template<>
+class Usuario<HostPolicy> {
+private:
+    char* documento;
+    char* contraseña;
+    int antiguedadMeses;
+    double puntuacion;
+    Lista<Alojamiento> alojamientos;
+
+    void copiarDesde(const Usuario<HostPolicy>& otro) {
+        documento = new char[strlen(otro.documento) + 1];
+        strcpy(documento, otro.documento);
+        contraseña = new char[strlen(otro.contraseña) + 1];
+        strcpy(contraseña, otro.contraseña);
+        antiguedadMeses = otro.antiguedadMeses;
+        puntuacion = otro.puntuacion;
+
+        typename Lista<Alojamiento>::ConstIterador it = otro.alojamientos.obtenerIterador();
+        while (it.haySiguiente()) {
+            alojamientos.insertar(it.siguiente());
+        }
+    }
+
+public:
+    Usuario(const char* doc, const char* pass, int antiguedad, double punt)
+        : documento(new char[strlen(doc) + 1]),
+        contraseña(new char[strlen(pass) + 1]),
+        antiguedadMeses(antiguedad),
+        puntuacion(punt) {
+        strcpy(documento, doc);
+        strcpy(contraseña, pass);
+    }
+
+    Usuario(const Usuario<HostPolicy>& otro) { copiarDesde(otro); }
+
+    Usuario<HostPolicy>& operator=(const Usuario<HostPolicy>& otro) {
+        if (this != &otro) {
+            delete[] documento;
+            delete[] contraseña;
+            alojamientos.limpiar();
+            copiarDesde(otro);
+        }
+        return *this;
+    }
+
+    ~Usuario() {
+        delete[] documento;
+        delete[] contraseña;
+    }
+
+    void agregarAlojamiento(const Alojamiento& alojamiento) {
+        alojamientos.insertar(alojamiento);
+    }
+
+    bool eliminarAlojamiento(const char* codigo) {
+        for (int i = 0; i < alojamientos.tamano(); ++i) {
+            if (strcmp(alojamientos.obtener(i).getCodigo(), codigo) == 0) {
+                // CORRECTO: Usa eliminarEnIndice
+                return alojamientos.eliminarEnIndice(i);
+            }
+        }
+        return false;
+    }
+
+
+
+    Lista<Alojamiento> obtenerAlojamientos() const { return alojamientos; }
+
+    char* toCSV() const {
+        std::ostringstream oss;
+        oss << documento << "," << contraseña << ","
+            << antiguedadMeses << "," << puntuacion << ","
+            << HostPolicy::getNombreColeccion();
+
+        typename Lista<Alojamiento>::ConstIterador it = alojamientos.obtenerIterador();
+        while (it.haySiguiente()) {
+            char* csv = it.siguiente().toCSV();
+            oss << "," << csv;
+            delete[] csv;
+        }
+
+        char* resultado = new char[oss.str().size() + 1];
+        strcpy(resultado, oss.str().c_str());
+        return resultado;
+    }
+};
+
+using Anfitrion = Usuario<HostPolicy>;
+
+#endif // CLASES_H <-- Asegúrate de que esto esté al final
+

@@ -75,6 +75,31 @@ public:
         return false;
     }
 
+    bool eliminarEnIndice(int index) {
+        if (index < 0 || index >= longitud) {
+            return false;
+        }
+
+        if (index == 0) {
+            Nodo* temp = cabeza;
+            cabeza = cabeza->siguiente;
+            delete temp;
+            longitud--;
+            return true;
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index - 1; i++) {
+            actual = actual->siguiente;
+        }
+
+        Nodo* temp = actual->siguiente;
+        actual->siguiente = temp->siguiente;
+        delete temp;
+        longitud--;
+        return true;
+    }
+
     void limpiar() {
         while (cabeza) {
             Nodo* temp = cabeza;
@@ -86,6 +111,31 @@ public:
 
     int tamano() const { return longitud; }
     bool vacia() const { return cabeza == nullptr; }
+
+    T& obtener(int index) {
+        if (index < 0 || index >= longitud) {
+            throw std::out_of_range("Índice fuera de rango");
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index; i++) {
+            actual = actual->siguiente;
+        }
+        return actual->dato;
+    }
+
+    const T& obtener(int index) const {
+        if (index < 0 || index >= longitud) {
+            throw std::out_of_range("Índice fuera de rango");
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index; i++) {
+            actual = actual->siguiente;
+        }
+        return actual->dato;
+    }
+
 
     class Iterador {
         Nodo* actual;
@@ -193,6 +243,31 @@ public:
         return false;
     }
 
+    bool eliminarEnIndice(int index) {
+        if (index < 0 || index >= longitud) {
+            return false;
+        }
+
+        if (index == 0) {
+            Nodo* temp = cabeza;
+            cabeza = cabeza->siguiente;
+            delete temp;
+            longitud--;
+            return true;
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index - 1; i++) {
+            actual = actual->siguiente;
+        }
+
+        Nodo* temp = actual->siguiente;
+        actual->siguiente = temp->siguiente;
+        delete temp;
+        longitud--;
+        return true;
+    }
+
     void limpiar() {
         while (cabeza) {
             Nodo* temp = cabeza;
@@ -204,6 +279,30 @@ public:
 
     int tamano() const { return longitud; }
     bool vacia() const { return cabeza == nullptr; }
+
+    char* obtener(int index) {
+        if (index < 0 || index >= longitud) {
+            throw std::out_of_range("Índice fuera de rango");
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index; i++) {
+            actual = actual->siguiente;
+        }
+        return actual->dato;
+    }
+
+    const char* obtener(int index) const {
+        if (index < 0 || index >= longitud) {
+            throw std::out_of_range("Índice fuera de rango");
+        }
+
+        Nodo* actual = cabeza;
+        for (int i = 0; i < index; i++) {
+            actual = actual->siguiente;
+        }
+        return actual->dato;
+    }
 
     class Iterador {
         Nodo* actual;
