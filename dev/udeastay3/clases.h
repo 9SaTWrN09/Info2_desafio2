@@ -39,6 +39,8 @@ public:
     static Fecha fromCSV(const char* linea);
 };
 
+
+
 // ==================== Clase Alojamiento ====================
 class Alojamiento {
 private:
@@ -88,9 +90,9 @@ public:
     static Alojamiento fromCSV(const char* linea);
 };
 
+
 // ==================== Enum Estado Reserva ====================
 enum class EstadoReserva { Activa, Anulada, Historica };
-
 // ==================== Clase Reserva ====================
 class Reserva {
 private:
@@ -110,6 +112,17 @@ public:
             const char* codAlojamiento, const char* docHuesped,
             const char* metodo, const Fecha& fPago, double monto,
             const char* anot = "");
+
+    Reserva() :
+        codigo(nullptr),
+        codigoAlojamiento(nullptr),
+        documentoHuesped(nullptr),
+        metodoPago(nullptr),
+        anotaciones(nullptr),
+        duracionNoches(0),
+        monto(0.0),
+        estado(EstadoReserva::Activa) {}
+
     Reserva(const Reserva& otra);
     Reserva& operator=(const Reserva& otra);
     ~Reserva();

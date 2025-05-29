@@ -2,6 +2,7 @@
 #define FILE_REPOSITORY_H
 
 #include "listas.h"
+#include "clases.h"
 #include <fstream>
 #include <stdexcept>
 #include <cstring>
@@ -160,34 +161,33 @@ public:
     }
 
     // Mueve una reserva a histórico
-    void moverAHistorico(const T& reserva) {
-        Lista<T> activas = cargar();
-        Lista<T> nuevasActivas;
-        T reservaModificada;
-        bool encontrada = false;
+    void moverAHistorico(T& reserva) {
+        // 1. Modificar el estado directamente
+        reserva.setEstado(EstadoReserva::Historica);
 
+        // 2. Guardar en histórico (usando la versión modificada)
+        FileRepository<T> repoHist("reservas_historicas_test.dat");
+        repoHist.guardar(reserva);
+
+        // 3. Eliminar de activas
+        Lista<T> activas = cargar();
+
+        // Buscar y eliminar por código (más seguro que por comparación)
+        bool encontrada = false;
+        Lista<T> nuevasActivas;
         auto it = activas.obtenerIterador();
+
         while (it.haySiguiente()) {
             T r = it.siguiente();
-            if (r == reserva) {
-                // 1. Modificar el estado
-                r.setEstado(Reserva::EstadoReserva::Historica);
-                // 2. Guardar la versión MODIFICADA
-                reservaModificada = r;
+            if (strcmp(r.getCodigo(), reserva.getCodigo()) == 0) {
                 encontrada = true;
             } else {
                 nuevasActivas.insertar(r);
             }
         }
 
-        // Guardar lista actualizada de activas
         guardarTodos(nuevasActivas);
-
-        if (encontrada) {
-            FileRepository<T> repoHist("reservas_historicas_test.dat");
-            // 3. Guardar la reserva MODIFICADA (no la original)
-            repoHist.guardar(reservaModificada);
-        }
     }
 
+};
 #endif // FILE_REPOSITORY_H

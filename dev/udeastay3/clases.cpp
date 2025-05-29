@@ -264,6 +264,7 @@ Reserva::Reserva(const Reserva& otra) {
     estado = otra.estado;
 }
 
+// clases.cpp (dentro de Reserva)
 Reserva& Reserva::operator=(const Reserva& otra) {
     if (this != &otra) {
         // Liberar memoria existente
@@ -273,13 +274,29 @@ Reserva& Reserva::operator=(const Reserva& otra) {
         delete[] metodoPago;
         delete[] anotaciones;
 
-        // Copiar nuevos valores
-        codigo = new char[strlen(otra.codigo) + 1];
-        strcpy(codigo, otra.codigo);
+        // Copiar cadenas
+        codigo = copiarCadena(otra.codigo);
+        codigoAlojamiento = copiarCadena(otra.codigoAlojamiento);
+        documentoHuesped = copiarCadena(otra.documentoHuesped);
+        metodoPago = copiarCadena(otra.metodoPago);
+        anotaciones = copiarCadena(otra.anotaciones);
 
-        // ... (copiar el resto de campos como en el constructor de copia)
+        // Copiar otros campos
+        fechaEntrada = otra.fechaEntrada;
+        duracionNoches = otra.duracionNoches;
+        fechaPago = otra.fechaPago;
+        monto = otra.monto;
+        estado = otra.estado;
     }
     return *this;
+}
+
+// Función auxiliar para copiar cadenas
+char* Reserva::copiarCadena(const char* original) {
+    if (!original) return nullptr;
+    char* copia = new char[strlen(original) + 1];
+    strcpy(copia, original);
+    return copia;
 }
 
 
@@ -296,59 +313,56 @@ void Reserva::anular() {
     estado = EstadoReserva::Anulada;
 }
 
+// clases.cpp (Reserva::toCSV)
 char* Reserva::toCSV() const {
+    // Usar formato consistente para fechas
+    char* entradaCSV = fechaEntrada.toCSV();
+    char* pagoCSV = fechaPago.toCSV();
+
     char buffer[2000];
-    snprintf(buffer, sizeof(buffer), "%s,%d/%d/%d,%d,%s,%s,%d,%s,%d/%d/%d,%.2f,%s",
+    snprintf(buffer, sizeof(buffer), "%s,%s,%d,%s,%s,%d,%s,%s,%.2f,%s",
              codigo,
-             fechaEntrada.getDia(), fechaEntrada.getMes(), fechaEntrada.getAño(),
+             entradaCSV,          // Fecha entrada formateada
              duracionNoches,
              codigoAlojamiento,
              documentoHuesped,
-             static_cast<int>(estado),
+             static_cast<int>(estado),  // Guardar estado como entero
              metodoPago,
-             fechaPago.getDia(), fechaPago.getMes(), fechaPago.getAño(),
+             pagoCSV,              // Fecha pago formateada
              monto,
              anotaciones);
+
+    delete[] entradaCSV;
+    delete[] pagoCSV;
 
     char* resultado = new char[strlen(buffer) + 1];
     strcpy(resultado, buffer);
     return resultado;
 }
 
+// clases.cpp (Reserva::fromCSV)
 Reserva Reserva::fromCSV(const char* linea) {
-    std::istringstream iss(linea);
-    std::string cod, fechaEntradaStr, codAlojamiento, docHuesped, metodo, fechaPagoStr, anot;
+    char cod[50], fechaEntradaStr[20], codAlojamiento[50], docHuesped[50];
+    char metodo[50], fechaPagoStr[20], anot[1001];
     int duracion, estadoInt;
     double monto;
 
-    std::getline(iss, cod, ',');
-    std::getline(iss, fechaEntradaStr, ',');
-    iss >> duracion;
-    iss.ignore();
-    std::getline(iss, codAlojamiento, ',');
-    std::getline(iss, docHuesped, ',');
-    iss >> estadoInt;
-    iss.ignore();
-    std::getline(iss, metodo, ',');
-    std::getline(iss, fechaPagoStr, ','); // ✅ Parsear fechaPago
-    iss >> monto;
-    iss.ignore();
-    std::getline(iss, anot);
+    // Usar sscanf para mayor control
+    sscanf(linea, "%[^,],%[^,],%d,%[^,],%[^,],%d,%[^,],%[^,],%lf,%[^\n]",
+           cod, fechaEntradaStr, &duracion, codAlojamiento, docHuesped,
+           &estadoInt, metodo, fechaPagoStr, &monto, anot);
 
-    Fecha entrada = Fecha::fromCSV(fechaEntradaStr.c_str());
-    Fecha pago = Fecha::fromCSV(fechaPagoStr.c_str()); // ✅ Crear fechaPago
+    Fecha entrada = Fecha::fromCSV(fechaEntradaStr);
+    Fecha pago = Fecha::fromCSV(fechaPagoStr);
 
-    return Reserva(
-        cod.c_str(),
-        entrada,
-        duracion,
-        codAlojamiento.c_str(),
-        docHuesped.c_str(),
-        metodo.c_str(),
-        pago, // ✅ Usar fechaPago parseada
-        monto,
-        anot.c_str()
-        );
+    Reserva res(cod, entrada, duracion, codAlojamiento, docHuesped,
+                metodo, pago, monto, anot);
+
+    // Establecer estado correctamente
+    res.setEstado(static_cast<EstadoReserva>(estadoInt));
+    return res;
 }
+
+
 
 

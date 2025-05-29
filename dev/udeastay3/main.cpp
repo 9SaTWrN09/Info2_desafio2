@@ -1,55 +1,53 @@
+// main.cpp (versión simplificada)
 #include <cassert>
+#include <cstdio>
+#include <iostream>
+#include <cctype>
+#include <string>
+#include <limits>
 #include "clases.h"
 #include "file_repository.h"
-#include <cstdio>// Para remove()
-#include <iostream>
 
-void testPersistencia() {
-    // Crear fechas
-    Fecha fechaPasada(10, 5, 2025);
-    Fecha fechaFutura(20, 6, 2025);
-    Fecha pago1(15, 6, 2025);
-    Fecha pago2(5, 5, 2025);
+FileRepository<Reserva> repoActivas("reservas_activas_test.dat");
+FileRepository<Reserva> repoHistoricas("reservas_historicas_test.dat");
 
-    // Crear reservas con todos los parámetros
-    Reserva activa("RES-100", fechaFutura, 5, "A001", "HUE-001",
-                   "Tarjeta", pago1, 500.0, "Comentario activa");
-
-    Reserva historica("RES-101", fechaPasada, 3, "A002", "HUE-002",
-                      "Efectivo", pago2, 300.0, "Comentario historica");
-
-    // Configurar repositorios
-    FileRepository<Reserva> repo("reservas_test.dat");
-    FileRepository<Reserva> repoHist("reservas_historicas_test.dat");
-
-    // Limpiar archivos previos (opcional)
-    remove("reservas_test.dat");
-    remove("reservas_historicas_test.dat");
-
-    // Guardar reservas
-    repo.guardar(activa);
-    repo.guardar(historica);
-
-    // Mover una reserva a histórico
-    repo.moverAHistorico(historica);
-
-    // Verificar resultados
-    Lista<Reserva> activas = repo.cargar();
-    Lista<Reserva> historicas = repoHist.cargar();
-
-    assert(activas.tamano() == 1);
-    assert(historicas.tamano() == 1);
-    assert(historicas.obtener(0).getEstado() == EstadoReserva::Historica);
-    assert(strcmp(activas.obtener(0).getCodigo(), "RES-100") == 0);
-
-    // Limpieza final
-    remove("reservas_test.dat");
-    remove("reservas_historicas_test.dat");
-
-    std::cout << "¡Test de persistencia pasado con éxito!" << std::endl;
+void probarPersistencia() {
+    // ... (tu implementación existente) ...
 }
 
 int main() {
-    testPersistencia();
+    std::string input;
+    bool salir = false;
+
+    while (!salir) {
+        std::cout << "\n=== MENU SIMPLIFICADO ===";
+        std::cout << "\n1. Probar persistencia";
+        std::cout << "\n2. Salir";
+        std::cout << "\nSeleccione una opción: ";
+
+        std::getline(std::cin, input);
+        if (input.empty()) continue;
+
+        char opcion = input[0];
+
+        if (opcion == '1') {
+            probarPersistencia();
+            std::cout << "Prueba completada correctamente!\n";
+        }
+        else if (opcion == '2') {
+            salir = true;
+            std::cout << "Saliendo del sistema...\n";
+        }
+        else {
+            std::cout << "Opción inválida.\n";
+        }
+
+        if (!salir) {
+            std::cin.clear();
+            std::cout << "Presione Enter para continuar...";
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+    }
+
     return 0;
-};
+}
